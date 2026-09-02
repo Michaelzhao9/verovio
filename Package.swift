@@ -43,6 +43,13 @@ let package = Package(
             name: "VerovioToolkit",
             dependencies: ["VerovioCore"],
             path: ".",
+            exclude: [
+                "CHANGELOG.md", "COPYING", "COPYING.LESSER", "MANIFEST.in", "README.md",
+                "Verovio.podspec", "Verovio.xcodeproj", "appveyor.yml", "codemeta.json",
+                "pyproject.toml", "setup.py",
+                "bindings/go", "bindings/iOS", "bindings/java", "bindings/python", "bindings/swift-core",
+                "cmake", "doc", "emscripten", "fonts", "include", "libmei", "src", "tools",
+            ],
             sources: ["bindings/swift-toolkit"],
             resources: [.copy("data")]
         )
