@@ -20,6 +20,17 @@ public class VerovioToolkit {
             vrvToolkit_destructor(tk)
         }
     }
+
+    /// Route Verovio log output (warnings about unsupported MEI, etc.) into the
+    /// in-memory buffer read back by `getLog()` instead of stderr. Process-wide.
+    public static func enableLogToBuffer(_ enabled: Bool) {
+        VerovioCore.enableLogToBuffer(enabled)
+    }
+
+    /// Turn Verovio logging on or off entirely. Process-wide.
+    public static func enableLog(_ enabled: Bool) {
+        VerovioCore.enableLog(enabled)
+    }
     
     public func edit(_ action: String) -> Bool {
         guard let tk = toolkitPtr else { return false }

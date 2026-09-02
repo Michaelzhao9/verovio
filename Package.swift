@@ -10,6 +10,7 @@ let package = Package(
     products: [
         .library(
             name: "VerovioToolkit",
+            type: .dynamic,
             targets: ["VerovioToolkit"]
         )
     ],
@@ -35,8 +36,7 @@ let package = Package(
                 .headerSearchPath("include/vrv"),
                 .headerSearchPath("include/zip"),
                 .headerSearchPath("libmei/dist"),
-                .headerSearchPath("libmei/addons"),
-                .unsafeFlags(["-std=c++23"])
+                .headerSearchPath("libmei/addons")
             ]
         ),
         .target(
@@ -45,10 +45,7 @@ let package = Package(
             path: ".",
             sources: ["bindings/swift-toolkit"],
             resources: [.copy("data")]
-        ),
-        .testTarget(
-            name: "VerovioToolkitTests",
-            dependencies: ["VerovioToolkit"]
         )
-    ]
+    ],
+    cxxLanguageStandard: .cxx20
 )
