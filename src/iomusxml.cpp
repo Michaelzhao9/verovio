@@ -3572,7 +3572,10 @@ void MusicXmlInput::ReadMusicXmlNote(
                     continue; // handled with fret
                 }
                 else if (technicalChildName == "fret") {
-                    assert(isTablature);
+                    if (!isTablature || !note) {
+                        LogWarning("MusicXML fret indication on a non-tablature note is not supported.");
+                        continue;
+                    }
 
                     // set @tab.string and @tab.fret
                     const int fret = technicalChild.text().as_int();
