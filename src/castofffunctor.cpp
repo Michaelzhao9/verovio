@@ -165,6 +165,26 @@ FunctorCode CastOffSystemsFunctor::VisitPageMilestone(PageMilestoneEnd *pageMile
     return FUNCTOR_SIBLINGS;
 }
 
+FunctorCode CastOffSystemsFunctor::VisitPb(Pb *pb)
+{
+    // A page break must first start a system. Keep automatic line breaking
+    // within each page, and do not create an empty system for a trailing pb.
+    if (m_smart && m_contentSystem->GetNext(pb, MEASURE)) {
+        // Measures held for overhanging text still precede this explicit break.
+        for (Object *pendingElement : m_pendingElements) m_currentSystem->AddChild(pendingElement);
+        m_pendingElements.clear();
+        Measure *measure = vrv_cast<Measure *>(m_currentSystem->GetLast(MEASURE));
+        if (measure) {
+            const int measureRightX = measure->GetDrawingX() + measure->GetWidth() - m_shift;
+            m_currentSystem = new System();
+            m_page->AddChild(m_currentSystem);
+            m_shift += measureRightX;
+        }
+    }
+    pb->MoveItselfTo(m_currentSystem);
+    return FUNCTOR_SIBLINGS;
+}
+
 FunctorCode CastOffSystemsFunctor::VisitSb(Sb *sb)
 {
     if (m_smart) {
@@ -349,14 +369,19 @@ FunctorCode CastOffPagesFunctor::VisitSystem(System *system)
 
     const int systemMaxPerPage = m_doc->GetOptions()->m_systemMaxPerPage.GetValue();
     const int systemChildCount = m_currentPage->GetChildCount(SYSTEM);
-    if ((systemMaxPerPage && (systemMaxPerPage == systemChildCount))
+    const Object *pb = system->GetFirst(PB);
+    const Object *firstMeasure = system->GetFirst(MEASURE);
+    const bool forcedPage = (m_doc->GetOptions()->m_breaks.GetValue() == BREAKS_smart)
+        && pb && firstMeasure && (pb->GetIdx() < firstMeasure->GetIdx());
+    if ((forcedPage && systemChildCount > 0)
+        || (systemMaxPerPage && (systemMaxPerPage == systemChildCount))
         || ((systemChildCount > 0)
             && (m_shift - system->GetDrawingYRel() + system->GetHeight() > this->GetAvailableDrawingHeight()))) {
         // If this is the last system in the list, it doesn't fit the page and it's a leftover system (has just one
         // measure) => add the system content to the previous system
         Object *nextSystem = m_contentPage->GetNext(system, SYSTEM);
         Object *lastSystem = m_currentPage->GetLast(SYSTEM);
-        if (!nextSystem && lastSystem && (system == m_leftoverSystem)) {
+        if (!forcedPage && !nextSystem && lastSystem && (system == m_leftoverSystem)) {
             ArrayOfObjects &children = system->GetChildrenForModification();
             for (Object *child : children) {
                 child->MoveItselfTo(lastSystem);
